@@ -1,0 +1,104 @@
+@echo off
+
+:: all directories must NOT have trailing "\"
+set destination=c:\vcap\store\mssql\master
+set source=C:\Program Files\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQL\DATA
+set errorlogsource=C:\Program Files\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQL\Log
+set errorlogdestination=c:\vcap\sys\log\mssql_node
+set defaultsapassword=changem3!
+set sapassword=<%= properties.mssql_node.admin_password %>
+set sqlserveruser=NT AUTHORITY\SYSTEM
+
+if not exist "%destination%" mkdir "%destination%"
+if not exist "%errorlogdestination%" mkdir "%errorlogdestination%"
+
+echo Using source "%source%"
+echo Using error log source "%errorlogsource%"
+echo Using destination "%destination%"
+echo Using error log destination "%errorlogdestination%"
+
+if not exist "%source%" goto :source_error
+if not exist "%errorlogsource%" goto :errorlog_source_error
+if not exist "%destination%" goto :error_log_destination_error
+if not exist "%errorlogdestination%" goto :destination_error
+
+for /f "delims=" %%a in ('where sqlcmd') do @set sqlcmd="%%a"
+if not exist %sqlcmd% goto :sqlcmd_error
+echo Using %sqlcmd%
+
+::try to change sa password
+set changepasswordsql=sp_password NULL,'%sapassword%','sa'
+call %sqlcmd% -H localshot -U sa -P%defaultsapassword% -d master -Q "%changepasswordsql%"
+
+::stop sql server
+net stop mssqlserver
+
+echo Changing SQL Server startup parameters
+
+call reg delete "HKLM\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQLServer\Parameters" /v SQLArg0 /f
+call reg delete "HKLM\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQLServer\Parameters" /v SQLArg1 /f
+call reg delete "HKLM\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQLServer\Parameters" /v SQLArg2 /f
+
+call reg add "HKLM\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQLServer\Parameters" /v SQLArg0 /t REG_SZ /d "-d%destination%\master.mdf"
+call reg add "HKLM\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQLServer\Parameters" /v SQLArg1 /t REG_SZ /d "-e%errorlogdestination%\errorlog"
+call reg add "HKLM\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQLServer\Parameters" /v SQLArg2 /t REG_SZ /d "-l%destination%\mastlog.ldf"
+
+
+:: if we can find the error log at its destination, then skip copying it
+if exist "%errorlogdestination%\errorlog" goto :copy_master
+
+echo Copying error log
+call copy "%errorlogsource%\errorlog" "%errorlogdestination%\"
+
+:copy_master
+
+:: if we can find the master DB at the destination, then skip copying it
+if exist "%destination%\master.mdf" goto :restart_mssql
+
+echo Copying master database
+call copy "%source%\master.mdf" "%destination%\"
+call copy "%source%\mastlog.ldf" "%destination%\"
+
+
+:restart_mssql
+
+::setup ACLs
+icacls "%destination%"  /grant "%sqlserveruser%:(F)" /t
+
+::start sql server
+net start mssqlserver
+
+::move temp DB
+set tempdbmovesql=alter database tempdb modify file (name = tempdev, filename = '%destination%\tempdb.mdf')
+set tempdbmovelog=alter database tempdb modify file (name = templog, filename = '%destination%\templog.ldf')
+
+call %sqlcmd% -H localshot -U sa -P%sapassword% -d master -Q "%tempdbmovesql%"
+call %sqlcmd% -H localshot -U sa -P%sapassword% -d master -Q "%tempdbmovelog%"
+
+::restart sql server
+net stop mssqlserver
+net start mssqlserver
+
+goto :exit
+
+:sqlcmd_error
+echo Cannot find sqlcmd.
+goto :exit
+
+:source_error
+echo Cannot find source folder.
+goto :exit
+
+:errorlog_source_error
+echo Cannot find error log source folder.
+goto :exit
+
+:destination_error
+echo Cannot find destination folder.
+goto :exit
+
+:error_log_destination_error
+echo Cannot find destination folder.
+goto :exit
+
+:exit

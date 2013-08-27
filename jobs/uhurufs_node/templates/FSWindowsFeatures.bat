@@ -1,0 +1,1 @@
+DISM.exe /online /NoRestart /enable-feature /featurename:IIS-WebServerRole /featurename:IIS-WebServer /featurename:IIS-FTPServer /featurename:IIS-FTPSvc /featurename:IIS-FTPExtensibility /featurename:CoreFileServer

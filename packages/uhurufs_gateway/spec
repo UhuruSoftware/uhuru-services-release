@@ -1,0 +1,8 @@
+---
+name: uhurufs_gateway
+dependencies:
+- ruby
+- sqlite
+files:
+- uhurufs_service/**/*
+- pkg_utils/*

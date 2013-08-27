@@ -1,0 +1,53 @@
+﻿<%
+plan = properties.plan || "free"
+%>
+<uhuru xmlns="urn:Uhuru.Configuration">
+  <service
+    index="<%= spec.index %>"
+    plan="<%= plan %>"
+    capacity="<%= properties.mssql_node.capacity %>"
+    
+    baseDir="<%= properties.mssql_node.basedir || 'C:\vcap\store\mssql' %>"
+    localRoute="<%= spec.networks.send(properties.networks.apps).ip %>"
+    nodeId="<%= "mssql_node#{'_' + plan if plan != 'free'}_#{spec.index.to_i + 1}" %>"
+    zInterval="30000"
+    mbus="nats://<%= properties.nats.user %>:<%= properties.nats.password %>@<%= properties.nats.address %>:<%= properties.nats.port %>"
+    localDb="C:\vcap\store\mssql_node.xml"
+    migrationNfs="C:\vcap\store\services_migration"
+
+    maxNatsPayload="1048576"
+    fqdnHosts="false"
+    opTimeLimit="6"
+    
+    statusPort="<%= properties.mssql_node.statusport || '12345'%>" >
+    
+    <mssql
+      host="127.0.0.1"
+      user="<%= properties.mssql_node.admin_user %>"
+      password="<%= properties.mssql_node.admin_password %>"
+      port="<%= properties.mssql_node.port %>"
+      
+      maxDbSize="<%= properties.mssql_node.max_db_size %>"
+      maxLongQuery="<%= properties.mssql_node.max_long_query %>"
+      maxLongTx="<%= properties.mssql_node.max_long_tx %>"
+      maxUserConns="<%= properties.mssql_node.max_user_conns %>"
+      
+      initialDataSize="<%= properties.mssql_node.initial_db_size || '4096KB' %>"
+      dataFileGrowth="<%= properties.mssql_node.data_file_growth || '5120KB' %>"
+      logFileGrowth="<%= properties.mssql_node.log_file_growth || '1024KB' %>"
+      maxDataSize="<%= properties.mssql_node.max_data_size || 'UNLIMITED' %>"
+      initialLogSize="<%= properties.mssql_node.initial_log_size || '2048KB' %>"
+      maxLogSize="<%= properties.mssql_node.max_log_size || 'UNLIMITED' %>"
+      
+      logicalStorageUnits="<%= properties.mssql_node.logical_storage_units || 'C:\vcap\store' %>" />
+
+    <supportedVersions defaultVersion="<%= properties.mssql_node.default_version %>">
+      <!-- TODO for multiple supported versions -->
+      <supportedVersion name="2008"/>
+    </supportedVersions>
+    <backup
+      backupBaseDir="C:\vcap\store\services_backup"
+      timeout="120"
+      serviceName="mssql"/>
+  </service>
+</uhuru>

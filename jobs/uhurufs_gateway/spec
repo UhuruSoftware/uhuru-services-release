@@ -1,0 +1,14 @@
+---
+name: uhurufs_gateway
+
+templates:
+    uhurufs_gateway_ctl: bin/uhurufs_gateway_ctl
+    uhurufs_gateway.yml.erb: config/uhurufs_gateway.yml
+    syslog_forwarder.conf.erb: config/syslog_forwarder.conf
+
+packages:
+    - common
+    - uhurufs_gateway
+    - ruby
+    - sqlite
+    - syslog_aggregator

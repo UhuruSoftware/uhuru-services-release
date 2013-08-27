@@ -1,0 +1,38 @@
+﻿<%
+plan = properties.plan || "free"
+%>
+<uhuru>
+  <service
+    index="<%= spec.index %>"
+    plan="<%= plan %>"
+    capacity="<%= properties.uhurufs_node.capacity %>"
+    
+    baseDir="<%= properties.uhurufs_node.basedir || 'C:\vcap\store\uhurufs' %>"
+    localRoute="<%= spec.networks.send(properties.networks.apps).ip %>"
+    nodeId="<%= "uhurufs_node#{'_' + plan if plan != 'free'}_#{spec.index.to_i + 1}" %>"
+    zInterval="30000"
+    mbus="nats://<%= properties.nats.user %>:<%= properties.nats.password %>@<%= properties.nats.address %>:<%= properties.nats.port %>"
+    localDb="C:\vcap\store\uhurufs_node.xml"
+    migrationNfs="C:\vcap\store\services_migration"
+
+    maxNatsPayload="1048576"
+    fqdnHosts="false"
+    opTimeLimit="6"
+    
+    statusPort="<%= properties.uhurufs_node.statusport || '12345' %>">
+
+    <uhurufs
+      maxStorageSize="<%= properties.uhurufs_node.storage_size || 1000 %>"
+      useFsrm="true"
+      useVhd="false"
+      vhdFixedSize="false"
+      />
+    <supportedVersions defaultVersion="<%= properties.uhurufs_node.default_version %>">
+      <supportedVersion name="0.9"/>
+    </supportedVersions>
+    <backup
+      backupBaseDir="C:\vcap\store\services_backup"
+      timeout="120"
+      serviceName="uhurufs"/>
+  </service>
+</uhuru>

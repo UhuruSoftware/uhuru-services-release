@@ -1,0 +1,5 @@
+check process mssql_gateway
+  with pidfile /var/vcap/sys/run/mssql_gateway/mssql_gateway.pid
+  start program "/var/vcap/jobs/mssql_gateway/bin/mssql_gateway_ctl start"
+  stop program "/var/vcap/jobs/mssql_gateway/bin/mssql_gateway_ctl stop"
+  group vcap

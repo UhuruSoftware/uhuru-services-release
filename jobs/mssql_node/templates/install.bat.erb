@@ -1,0 +1,8 @@
+call "C:\Program Files\Microsoft SQL Server\100\Setup Bootstrap\SQLServer2008R2\x64\setup100.exe" /q /ACTION=editionupgrade /INSTANCENAME=MSSQLSERVER /PID=<%= properties.mssql_node.product_key || '11111-00000-00000-00000-00000' %> /IACCEPTSQLSERVERLICENSETERMS
+call C:\vcap\jobs\mssql_node\move_system_db.bat
+copy "C:\vcap\jobs\mssql_node\uhuru.config" "C:\vcap\packages\mssql_node\uhuru.config"
+call NET START MSSQLServer
+sc create MSSqlNode DisplayName= "Uhuru Services for Microsoft SQL Server" binPath= "C:\vcap\packages\mssql_node\MSSqlNode.exe" start= auto
+sc config "MSSqlNode"  depend= "MSSQLServer"
+netsh advfirewall firewall add rule name="mssqlnode_statusport" protocol=TCP dir=in localport=<%= properties.mssql_node.statusport || '12345' %> action=allow
+sc failure MSSqlNode actions= restart/0 reset= 0

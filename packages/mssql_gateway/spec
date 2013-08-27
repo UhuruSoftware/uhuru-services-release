@@ -1,0 +1,8 @@
+---
+name: mssql_gateway
+dependencies:
+- ruby
+- sqlite
+files:
+- mssql_service/**/*
+- pkg_utils/*

@@ -1,0 +1,6 @@
+<Job>
+  <Service Name="Uhuru Services for Microsoft SQL Server">
+    <PreStart>C:\vcap\jobs\mssql_node\install.bat</PreStart>
+    <PreStop></PreStop>
+  </Service>
+</Job>

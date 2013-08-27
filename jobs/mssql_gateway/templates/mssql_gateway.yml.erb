@@ -1,0 +1,106 @@
+---
+<%
+service = "mssql"
+gateway = eval("properties.#{service}_gateway")
+acls = gateway.acls
+plan_enabled = properties.service_plans && properties.service_plans.send(service.to_sym)
+plan_mgmt = plan_enabled && properties.service_plans.send(service.to_sym)
+plan_mgmt.instance_eval("def fields; @table.keys; end;") if plan_mgmt
+supported_versions = gateway.supported_versions
+version_aliases = gateway.version_aliases
+version_aliases.instance_eval("def fields; @table.keys; end;") if version_aliases
+nats = "nats://#{properties.nats.user}:#{properties.nats.password}@#{properties.nats.address}:#{properties.nats.port}"
+lifecycle = properties.service_lifecycle
+%>
+mbus: <%= nats %>
+index: <%= spec.index %>
+
+cloud_controller_uri: <%= properties.cc.srv_api_uri %>
+
+service:
+  name: mssql
+  version: "2008"
+  description: 'MS SQL Server database service'
+  plans: ['<%= plan_enabled && plan_mgmt.fields.join("', '") || 'free' %>']
+  default_plan: <%= gateway.default_plan || 'free' %>
+  cf_plan_id:
+<% plan_mgmt.fields.each do |pf| %>
+    <%= "#{pf}: #{plan_mgmt.send(pf).configuration.cf_plan_id}" %>
+<% end if plan_mgmt %>
+  tags: ['relational']
+  timeout: <%= properties.mssql_gateway.service_timeout || 10 %>
+<% if acls %>
+  <% if acls.is_a? String %>
+  acls: <%= acls %>
+  <% else %>
+    <% acls.plans.instance_eval("def fields; @table.keys; end;") if acls && acls.plans %>
+  acls:
+    <%= "users: ['#{acls.users.join("', '")}']" if acls.users %>
+    <%= "wildcards: ['#{acls.wildcards.join("', '")}']" if acls.wildcards %>
+    <% if acls.plans %>
+    plans:
+      <% acls.plans.fields.each do |plan|%>
+      <%= "#{plan}:"%>
+        <%= "users: ['#{acls.plans.send(plan.to_sym).users.join("', '")}']" if acls.plans.send(plan.to_sym).users %>
+        <%= "wildcards: ['#{acls.plans.send(plan.to_sym).wildcards.join("', '")}']" if acls.plans.send(plan.to_sym).wildcards %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>
+  supported_versions: <%= "['#{supported_versions.join("' , '")}']" %>
+<% if version_aliases && !version_aliases.fields.empty? %>
+  version_aliases:
+  <% for version_alias in version_aliases.fields.each %>
+    <%= "'#{version_alias}': '#{version_aliases.send(version_alias.to_sym)}'" %>
+  <% end %>
+<% end %>
+
+<% if gateway.ip_route %>
+ip_route: <%= gateway.ip_route %>
+<% end %>
+token: <%= gateway.token %>
+logging:
+  file: /var/vcap/sys/log/mssql_gateway/mssql_gateway.log
+  level: debug
+  <% if properties.syslog_aggregator %>
+  syslog: vcap.mssql_gateway
+  <% end %>
+
+pid: /var/vcap/sys/run/mssql_gateway/mssql_gateway.pid
+node_timeout: <%= gateway.node_timeout || 8 %>
+z_interval: <%= gateway.z_interval || 30 %>
+check_orphan_interval: <%= gateway.check_orphan_interval || -1 %>
+double_check_orphan_interval: <%= gateway.double_check_orphan_interval || 300 %>
+max_nats_payload: <%= properties.nats.max_payload || 1048576 %>
+
+<% if lifecycle and lifecycle.resque %>
+resque:
+  host: <%= lifecycle.resque.host %>
+  port: <%= lifecycle.resque.port %>
+  password: <%= lifecycle.resque.password %>
+  expire: <%= lifecycle.resque.expire %>
+download_url_template: "http://<%= lifecycle.download_url %>/serialized/%{service}/%{name}/snapshots/%{snapshot_id}?token=%{token}"
+<% end %>
+
+<% if plan_enabled %>
+plan_management:
+  plans:
+<% plan_mgmt.fields.each do |pf| %>
+    <%= pf %>:
+      high_water: <%= plan_mgmt.send(pf).job_management.high_water %>
+      low_water: <%= plan_mgmt.send(pf).job_management.low_water %>
+      allow_over_provisioning: <%= plan_mgmt.send(pf).configuration.allow_over_provisioning || "false" %>
+    <% opts = plan_mgmt.send(pf).configuration.lifecycle %>
+    <% if opts && opts.enable == true %>
+      lifecycle:
+        serialization: <%= opts.serialization || "disable" %>
+      <% if opts.snapshot %>
+        snapshot:
+          quota: <%= opts.snapshot.quota || 0 %>
+      <% end %>
+      <% if opts.serialization || opts.snapshot %>
+        job: enable
+      <% end %>
+    <% end %>
+<% end %>
+<% end %>

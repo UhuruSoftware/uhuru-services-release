@@ -1,0 +1,5 @@
+msiexec /a vcap_dotnet\installers\MSSqlNodeInstaller.msi /qb TARGETDIR=%CD%\temp
+del %CD%\temp\uhuru.config
+xcopy "temp" "%BOSH_INSTALL_TARGET%" /O /X /E /H /K /I /J /Y
+
+

@@ -1,0 +1,5 @@
+---
+name: mssql_node
+
+files:
+  - vcap_dotnet/installers/MSSqlNodeInstaller.msi

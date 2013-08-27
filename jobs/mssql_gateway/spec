@@ -1,0 +1,14 @@
+---
+name: mssql_gateway
+
+templates:
+    mssql_gateway_ctl: bin/mssql_gateway_ctl
+    mssql_gateway.yml.erb: config/mssql_gateway.yml
+    syslog_forwarder.conf.erb: config/syslog_forwarder.conf
+
+packages:
+    - common
+    - mssql_gateway
+    - ruby
+    - sqlite
+    - syslog_aggregator

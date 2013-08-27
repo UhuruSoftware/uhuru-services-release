@@ -1,0 +1,7 @@
+---
+final_name: uhuru-services-release
+min_cli_version: 1.0.3
+blobstore:
+  provider: s3
+  options:
+    bucket_name: blob.cfblob.com

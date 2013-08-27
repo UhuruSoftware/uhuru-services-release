@@ -1,0 +1,11 @@
+---
+name: mssql_node
+templates:
+    install.bat.erb: install.bat
+    drain.bat.erb: drain.bat
+    uhuru.config.erb: uhuru.config
+    move_system_db.bat.erb: move_system_db.bat
+
+packages:
+  - mssql_node
+

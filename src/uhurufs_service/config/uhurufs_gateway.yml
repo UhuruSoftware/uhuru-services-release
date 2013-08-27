@@ -1,0 +1,37 @@
+---
+#cloud_controller_uri: api.vcap.me
+service:
+  name: uhurufs
+  unique_id: e1c26b46-f2d5-4243-9a1d-b0a34c118602
+  version: "2008 R2"
+  description: 'Uhuru''s File System Service'
+  plans: ['free','expensive']
+  default_plan: free
+  tags: ['relational']
+ip_route: localhost
+
+index: 0
+token: "0xdeadbeef"
+logging:
+  level: debug
+mbus: nats://localhost:4222
+pid: /var/vcap/sys/run/uhurufs_service.pid
+node_timeout: 2
+resque:
+  host: localhost
+  port: 5454
+download_url_template: http://dl.vcap.me/serialized/%{service}/%{name}/snapshots/%{snapshot_id}?token=%{token}
+
+plan_management:
+  plans:
+    free:
+      low_water: 10
+      high_water: 180
+      lifecycle:
+        snapshot:
+          quota: 5
+        serialization: enable
+        job: enable
+    expensive:
+      low_water: 1
+      high_water: 20

@@ -1,0 +1,5 @@
+check process uhurufs_gateway
+  with pidfile /var/vcap/sys/run/uhurufs_gateway/uhurufs_gateway.pid
+  start program "/var/vcap/jobs/uhurufs_gateway/bin/uhurufs_gateway_ctl start"
+  stop program "/var/vcap/jobs/uhurufs_gateway/bin/uhurufs_gateway_ctl stop"
+  group vcap
