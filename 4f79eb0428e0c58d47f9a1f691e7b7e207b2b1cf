@@ -1,0 +1,8 @@
+Change-Id: I4f79eb0428e0c58d47f9a1f691e7b7e207b2b1cf
+Code-Review+2: Stefan Schneider <stefan.schneider@uhurusoftware.com>
+Verified+1: Stefan Schneider <stefan.schneider@uhurusoftware.com>
+Submitted-by: Florin Dragos <florind@uhurusoftware.com>
+Submitted-at: Wed, 23 Oct 2013 17:52:10 +0300
+Reviewed-on: http://gerrit.uhurusoftware.org/2166
+Project: private-uhuru-services-release
+Branch: refs/heads/master
