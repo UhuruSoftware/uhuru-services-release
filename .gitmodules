@@ -3,4 +3,4 @@
 	url = https://github.com/cloudfoundry/shared-release-packages.git
 [submodule "src/vcap_dotnet"]
 	path = src/vcap_dotnet
-	url = git@github.com:UhuruSoftware/private-vcap-dotnet.git
+	url = git@github.com:UhuruSoftware/vcap-dotnet.git
