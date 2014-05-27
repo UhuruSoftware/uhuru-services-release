@@ -3,4 +3,5 @@ copy "C:\vcap\jobs\uhurufs_node\uhuru.config" "C:\vcap\packages\uhurufs_node\uhu
 call NET START SERVER
 sc create UhuruFS DisplayName= "Uhuru FileService" binPath= "C:\vcap\packages\uhurufs_node\FileServiceNode.exe" start= auto
 netsh advfirewall firewall add rule name="uhurufs_statusport" protocol=TCP dir=in localport=<%= properties.uhurufs_node.statusport || '12345' %> action=allow
+netsh advfirewall firewall add rule name="mssql_server" protocol=TCP dir=in localport=1433 action=allow
 sc failure UhuruFS actions= restart/0 reset= 0
